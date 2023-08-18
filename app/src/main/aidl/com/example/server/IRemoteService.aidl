@@ -8,6 +8,9 @@ interface IRemoteService {
     /** Request the process ID of this service. */
     int getPid();
 
+    /** Request the Rect object of this service. */
+    Rect getRect();
+
     /**
      * Demonstrates some basic types that you can use as parameters
      * and return values in AIDL.

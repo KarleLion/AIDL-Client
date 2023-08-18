@@ -1,22 +1,26 @@
 package com.example.client;
 
-import androidx.appcompat.app.AppCompatActivity;
-
+import android.annotation.SuppressLint;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.graphics.Rect;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.util.Log;
 import android.widget.TextView;
 
+import androidx.appcompat.app.AppCompatActivity;
+
 import com.example.server.IRemoteService;
 
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity-";
+
+    private TextView tvTip;
 
     private IRemoteService remoteService;
 
@@ -28,8 +32,6 @@ public class MainActivity extends AppCompatActivity {
             Log.d(TAG, "onServiceConnected: ");
             remoteService = IRemoteService.Stub.asInterface(iBinder);
             isBound = true;
-
-
         }
 
         @Override
@@ -39,6 +41,7 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
+    @SuppressLint("SetTextI18n")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -52,7 +55,12 @@ public class MainActivity extends AppCompatActivity {
             if (isBound && remoteService != null) {
                 try {
                     int pid = remoteService.getPid();
-                    ((TextView) findViewById(R.id.tv_Tip)).setText("Process id: " + pid);
+                    Rect rect = remoteService.getRect();
+                    tvTip.setText("Process id: " + pid + ", Rect{left=" + rect.left
+                            + ", top=" + rect.top
+                            + ", right=" + rect.right
+                            + ", bottom=" + rect.bottom
+                            + "}");
                 } catch (RemoteException e) {
                     Log.d(TAG, "catch RemoteException");
                     e.printStackTrace();
@@ -60,8 +68,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
-
-    TextView tvTip;
 
     @Override
     protected void onStop() {
