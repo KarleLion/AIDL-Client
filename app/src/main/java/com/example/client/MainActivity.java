@@ -14,13 +14,14 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.client.databinding.ActivityMainBinding;
 import com.example.server.IRemoteService;
 
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity-";
 
-    private TextView tvTip;
+    private ActivityMainBinding binding;
 
     private IRemoteService remoteService;
 
@@ -45,28 +46,50 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        binding = ActivityMainBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
 
         Log.d(TAG, "onCreate: ");
         bindService();
 
-        tvTip = findViewById(R.id.tv_Tip);
-        tvTip.setOnClickListener(v -> {
-            if (isBound && remoteService != null) {
-                try {
-                    int pid = remoteService.getPid();
-                    Rect rect = remoteService.getRect();
-                    tvTip.setText("Process id: " + pid + ", Rect{left=" + rect.left
-                            + ", top=" + rect.top
-                            + ", right=" + rect.right
-                            + ", bottom=" + rect.bottom
-                            + "}");
-                } catch (RemoteException e) {
-                    Log.d(TAG, "catch RemoteException");
-                    e.printStackTrace();
-                }
-            }
+        binding.btnGetRect.setOnClickListener(v -> {
+            Log.d(TAG, "binding.btnGetRect is clicked");
+
+            performCallback(() -> {
+                Rect rect = remoteService.getRect();
+                binding.tvTip.setText(rect == null ? "rect = null"
+                        : "-->get Rect  left: " + rect.left
+                        + ", top: " + rect.top
+                        + ", right: " + rect.right
+                        + ", bottom: " + rect.bottom);
+            });
         });
+
+        binding.btnSaveRect.setOnClickListener(v -> {
+            Log.d(TAG, "binding.btnGetRect is clicked");
+
+            performCallback(() -> {
+                Rect rect = new Rect(10, 11, 12, 13);
+                Bundle bundle = new Bundle();
+                bundle.putParcelable("rect", rect);
+                remoteService.saveRect(bundle);
+
+                binding.tvTip.setText("-->save Rect  left: " + rect.left
+                        + ", top: " + rect.top
+                        + ", right: " + rect.right
+                        + ", bottom: " + rect.bottom);
+            });
+        });
+
+        binding.btnGetPid.setOnClickListener(v -> {
+            Log.d(TAG, "binding.btnGetRect is clicked");
+
+            performCallback(() -> {
+                int pid = remoteService.getPid();
+                binding.tvTip.setText("pid: " + pid);
+            });
+        });
+
     }
 
     @Override
@@ -86,5 +109,25 @@ public class MainActivity extends AppCompatActivity {
         intent.setComponent(new ComponentName("com.example.server", "com.example.server.RemoteService"));
         intent.setAction("com.example.server.REMOTE_SERVICE");
         bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
+    }
+
+    void performCallback(Callback callback) {
+        try {
+            if (isBound && remoteService != null) {
+                callback.onCallback();
+            } else if (!isBound) {
+                Log.d(TAG, "isBound = false");
+            } else {
+                Log.d(TAG, "remoteService = null");
+            }
+        } catch (RemoteException e) {
+            Log.d(TAG, "catch RemoteException");
+            e.printStackTrace();
+        }
+
+    }
+
+    interface Callback {
+        void onCallback() throws RemoteException;
     }
 }
