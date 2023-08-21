@@ -11,6 +11,9 @@ interface IRemoteService {
     /** Request the Rect object of this service. */
     Rect getRect();
 
+    /** Rect parcelable is stored in the bundle with key "rect". */
+    void saveRect(in Bundle bundle);
+
     /**
      * Demonstrates some basic types that you can use as parameters
      * and return values in AIDL.
